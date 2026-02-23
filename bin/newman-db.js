@@ -14,18 +14,22 @@ program
     .option('--db-config <path>', 'DB config JSON file')
     .option('--reporters <list>', 'Reporters to use', 'cli')
     .option('--reporter-htmlextra-export <path>', 'HTML report output path')
+    .option('--insecure', 'Disable SSL certificate verification')
+    .option('--timeout-request <ms>', 'Request timeout in milliseconds', parseInt)
     .action(async (collection, options) => {
         try {
             await run({
                 collection,
                 environment: options.environment,
                 dbConfig: options.dbConfig,
+                insecure: options.insecure || false,
                 reporters: options.reporters.split(','),
                 reporter: {
                     htmlextra: {
                         export: options.reporterHtmlextraExport
                     }
-                }
+                },
+                ...(options.timeoutRequest && { timeout: { request: options.timeoutRequest } })
             });
         } catch (err) {
             console.error(err.message);

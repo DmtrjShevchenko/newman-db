@@ -1,0 +1,8 @@
+{
+  "type": "oracle",
+  "user": "YOUR_DB_USER",
+  "password": "YOUR_DB_PASSWORD",
+  "host": "localhost",
+  "port": 1521,
+  "service": "ORCL"
+}

@@ -1,0 +1,338 @@
+{
+  "info": {
+    "_postman_id": "5954a76d-b966-4eb8-9f5a-6886c023fa3f",
+    "name": "B2NG_MD_ATM_order",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "24003437"
+  },
+  "item": [
+    {
+      "name": "logged-in",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.globals.set(\"JSESSIONID2\", pm.cookies.get('JSESSIONID'));\r",
+              "pm.globals.set(\"XSRF-TOKEN1\", pm.cookies.get('XSRF-TOKEN'));"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{MD_url}}logged-in",
+          "host": [
+            "{{MD_url}}logged-in"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "logIn",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.globals.set(\"JSESSIONID2\", pm.cookies.get('JSESSIONID'));\r",
+              "pm.globals.set(\"XSRF-TOKEN1\", pm.cookies.get('XSRF-TOKEN'));"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-XSRF-TOKEN",
+            "value": "{{XSRF-TOKEN1}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{MD_url}}login?username=NG&password=c67",
+          "host": [
+            "{{MD_url}}login"
+          ],
+          "query": [
+            {
+              "key": "username",
+              "value": "NG"
+            },
+            {
+              "key": "password",
+              "value": "c67"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Сценарий 2(FULLrestAPI)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-XSRF-TOKEN",
+            "value": "{{XSRF-TOKEN1}}",
+            "type": "default"
+          },
+          {
+            "key": "JSESSIONID",
+            "value": "{{JSESSIONID2}}",
+            "type": "default"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"taskId\": \"176400\",\r\n    \"taskMethodCodename\": \"CS.CREATE_DOCUMENTS\",\r\n    \"taskMethodStepId\": \"storedProcedure\",\r\n    \"paramValues\": {\r\n        \"p_OrderId\": \"45\"\r\n    }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{MD_url}}tasks/declarative/execute-stored-procedure",
+          "host": [
+            "{{MD_url}}tasks"
+          ],
+          "path": [
+            "declarative",
+            "execute-stored-procedure"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "15.2_Order_docs.sql",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-XSRF-TOKEN",
+            "value": "{{XSRF-TOKEN1}}",
+            "type": "default"
+          },
+          {
+            "key": "JSESSIONID",
+            "value": "{{JSESSIONID2}}",
+            "type": "default"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\nSELECT to_char (doc.documentdate,'dd.mm.yyyy') documentdate, \r\n       doc.documenttypeid,\r\n       doc.accountano,\r\n       doc.accountbno,\r\n       doc.summa,\r\n       doc.currencyid,\r\n       doc.documentstateid,\r\n       doc.platpurpose,\r\n       doc.documentstreamid,\r\n       to_char (doc.valuedate,'dd.mm.yyyy') valuedate\r\n  FROM document_cur doc\r\n WHERE doc.id IN ( SELECT l2.documentid\r\n                     FROM atmencashorderdoc ad\r\n                     JOIN document_cur d ON ad.docsequenceid = d.docsequenceid\r\n                     JOIN Doc2Oper_Link l ON d.id = l.documentid\r\n                     JOIN Doc2Oper_Link l2 ON l.globalsequenceid = l2.globalsequenceid\r\n                    WHERE ad.orderid = 45\r\n                      AND ad.actionid = 4)                      \r\n order by doc.id\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "db://",
+          "protocol": "db"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Сценарий 3(FULLrestAPI)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-XSRF-TOKEN",
+            "value": "{{XSRF-TOKEN1}}",
+            "type": "default"
+          },
+          {
+            "key": "JSESSIONID",
+            "value": "{{JSESSIONID2}}",
+            "type": "default"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"taskId\": \"176400\",\r\n    \"taskMethodCodename\": \"CS.CREATE_DOCUMENTS\",\r\n    \"taskMethodStepId\": \"storedProcedure\",\r\n    \"paramValues\": {\r\n        \"p_OrderId\": \"42\"\r\n    }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{MD_url}}tasks/declarative/execute-stored-procedure",
+          "host": [
+            "{{MD_url}}tasks"
+          ],
+          "path": [
+            "declarative",
+            "execute-stored-procedure"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "15.3_Order_docs.sql",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-XSRF-TOKEN",
+            "value": "{{XSRF-TOKEN1}}",
+            "type": "default"
+          },
+          {
+            "key": "JSESSIONID",
+            "value": "{{JSESSIONID2}}",
+            "type": "default"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\nSELECT to_char (doc.documentdate,'dd.mm.yyyy') documentdate, \r\n       doc.documenttypeid,\r\n       doc.accountano,\r\n       doc.accountbno,\r\n       doc.summa,\r\n       doc.currencyid,\r\n       doc.documentstateid,\r\n       doc.platpurpose,\r\n       doc.documentstreamid,\r\n       to_char (doc.valuedate,'dd.mm.yyyy') valuedate\r\n  FROM document_cur doc\r\n WHERE doc.id IN ( SELECT l2.documentid\r\n                     FROM atmencashorderdoc ad\r\n                     JOIN document_cur d ON ad.docsequenceid = d.docsequenceid\r\n                     JOIN Doc2Oper_Link l ON d.id = l.documentid\r\n                     JOIN Doc2Oper_Link l2 ON l.globalsequenceid = l2.globalsequenceid\r\n                    WHERE ad.orderid = 42\r\n                      AND ad.actionid = 4)                      \r\n order by doc.id\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "db://",
+          "protocol": "db"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Сценарий 4(FULLrestAPI)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-XSRF-TOKEN",
+            "value": "{{XSRF-TOKEN1}}",
+            "type": "default"
+          },
+          {
+            "key": "JSESSIONID",
+            "value": "{{JSESSIONID2}}",
+            "type": "default"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"taskId\": \"176400\",\r\n    \"taskMethodCodename\": \"CS.CREATE_DOCUMENTS\",\r\n    \"taskMethodStepId\": \"storedProcedure\",\r\n    \"paramValues\": {\r\n        \"p_OrderId\": \"44\"\r\n    }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{MD_url}}tasks/declarative/execute-stored-procedure",
+          "host": [
+            "{{MD_url}}tasks"
+          ],
+          "path": [
+            "declarative",
+            "execute-stored-procedure"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "15.4_Order_docs.sql",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-XSRF-TOKEN",
+            "value": "{{XSRF-TOKEN1}}",
+            "type": "default"
+          },
+          {
+            "key": "JSESSIONID",
+            "value": "{{JSESSIONID2}}",
+            "type": "default"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\nSELECT to_char (doc.documentdate,'dd.mm.yyyy') documentdate, \r\n       doc.documenttypeid,\r\n       doc.accountano,\r\n       doc.accountbno,\r\n       doc.summa,\r\n       doc.currencyid,\r\n       doc.documentstateid,\r\n       doc.platpurpose,\r\n       doc.documentstreamid,\r\n       to_char (doc.valuedate,'dd.mm.yyyy') valuedate\r\n  FROM document_cur doc\r\n WHERE doc.id IN ( SELECT l2.documentid\r\n                     FROM atmencashorderdoc ad\r\n                     JOIN document_cur d ON ad.docsequenceid = d.docsequenceid\r\n                     JOIN Doc2Oper_Link l ON d.id = l.documentid\r\n                     JOIN Doc2Oper_Link l2 ON l.globalsequenceid = l2.globalsequenceid\r\n                    WHERE ad.orderid = 44\r\n                      AND ad.actionid = 4)                      \r\n order by doc.id\r\n\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "db://",
+          "protocol": "db"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "logOut",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "pm.response.to.have.status(200);\r",
+              "}); "
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-XSRF-TOKEN",
+            "value": "{{XSRF-TOKEN1}}",
+            "type": "text"
+          },
+          {
+            "key": "JSESSIONID",
+            "value": "{{JSESSIONID2}}",
+            "type": "default"
+          }
+        ],
+        "url": {
+          "raw": "{{MD_url}}logout?JSESSIONID={{JSESSIONID2}}",
+          "host": [
+            "{{MD_url}}logout"
+          ],
+          "query": [
+            {
+              "key": "JSESSIONID",
+              "value": "{{JSESSIONID2}}"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
