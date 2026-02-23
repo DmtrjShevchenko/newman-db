@@ -1,10 +1,18 @@
 {
   "name": "newman-db",
   "version": "1.0.0",
-  "description": "Newman runner for Postman collections with Oracle DB verification",
+  "description": "Newman runner for Postman collections with Oracle DB query support",
   "main": "lib/index.js",
   "bin": {
     "newman-db": "bin/newman-db.js"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=16"
   },
   "keywords": [
     "newman",
@@ -15,7 +23,12 @@
     "qa",
     "ci-cd"
   ],
+  "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/newman-db"
+  },
   "dependencies": {
     "commander": "^11.0.0",
     "newman": "^6.0.0",

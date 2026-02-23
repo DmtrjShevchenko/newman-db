@@ -1,96 +1,82 @@
 # newman-db
 
-A CLI wrapper around [Newman](https://github.com/postmanlabs/newman) that adds Oracle Database query support to Postman collection runs. Use `db://` URLs in your Postman requests to execute SQL queries and verify database state alongside your API tests.
+A CLI wrapper around [Newman](https://github.com/postmanlabs/newman) that adds Oracle Database query support to Postman collection runs.
 
-## How it works
-
-1. You run a Postman collection via `newman-db run`
-2. After each HTTP response, the tool extracts response fields into variables (`response.id`, `response.status`, etc.)
-3. Requests with a `db://` URL are intercepted — the SQL query is read from the request **body**
-4. `{{variables}}` in `params` values are resolved from the Postman environment and previous responses
-5. The query is executed using **bind variables** — safe from SQL injection
-6. Query results are injected back as a JSON response, readable in Postman test scripts
+Use `db://` URLs in Postman requests to execute SQL and verify database state alongside your API tests — no separate test framework needed.
 
 ## Installation
 
 ```bash
-npm install
+npm install -g newman-db
 ```
 
-For HTML reports also install the optional reporter:
+Or as a project dependency:
+
+```bash
+npm install newman-db
+```
+
+For HTML reports (optional):
 
 ```bash
 npm install newman-reporter-htmlextra
 ```
 
+## Quick start
+
+```bash
+newman-db run ./collection.json -e ./environment.json
+```
+
 ## Configuration
 
-Copy `db-config.example.json` to `db-config.json` and fill in your credentials:
+DB credentials live directly in the Postman environment file — no separate config file needed.
+
+Add one entry per database to the `values` array:
 
 ```json
 {
-  "type": "oracle",
-  "user": "YOUR_DB_USER",
-  "password": "YOUR_DB_PASSWORD",
-  "host": "localhost",
-  "port": 1521,
-  "service": "ORCL"
+  "_postman_variable_scope": "environment",
+  "values": [
+    {
+      "key": "MY_DB",
+      "type": "oracle",
+      "user": "DB_USER",
+      "password": "DB_PASSWORD",
+      "host": "db-host.example.com",
+      "port": 1521,
+      "service": "SERVICE_NAME"
+    }
+  ]
 }
 ```
 
-> `db-config.json` is listed in `.gitignore` — never commit real credentials.
+> Keep your environment file in `.gitignore` — never commit real credentials.
+> See `colletions/default_env.example.json` for a template.
 
-### Fields
+### DB entry fields
 
-| Field      | Description                                      |
-|------------|--------------------------------------------------|
-| `type`     | Database type. Currently only `oracle` supported |
-| `user`     | Database username                                |
-| `password` | Database password                                |
-| `host`     | Database host                                    |
-| `port`     | Database port (Oracle default: `1521`)           |
-| `service`  | Oracle service name (Easy Connect format)        |
+| Field      | Description                                   |
+|------------|-----------------------------------------------|
+| `key`      | Identifier used in `db://` URLs               |
+| `type`     | Database type — currently only `oracle`       |
+| `user`     | Database username                             |
+| `password` | Database password                             |
+| `host`     | Database host                                 |
+| `port`     | Database port (Oracle default: `1521`)        |
+| `service`  | Oracle service name (Easy Connect format)     |
 
-## Usage
+Multiple databases can coexist in the same environment file. Each connection is established lazily on first use.
 
-```bash
-# Run collection without DB
-node bin/newman-db.js run ./collection.json
+## Writing DB requests
 
-# Run with Postman environment file
-node bin/newman-db.js run ./collection.json -e ./environment.json
+| Field    | Value                                           |
+|----------|-------------------------------------------------|
+| Method   | `POST` (method is ignored)                      |
+| URL      | `db://<key>` — matches the `key` in env file   |
+| Body     | raw JSON                                        |
 
-# Run with DB verification
-node bin/newman-db.js run ./collection.json -e ./environment.json --db-config ./db-config.json
-
-# Run with HTML report
-node bin/newman-db.js run ./collection.json \
-  --db-config ./db-config.json \
-  --reporters cli,htmlextra \
-  --reporter-htmlextra-export ./report.html
-```
-
-### CLI options
-
-| Option                          | Description                                     |
-|---------------------------------|-------------------------------------------------|
-| `run <collection>`              | Path to Postman collection JSON                 |
-| `-e, --environment <path>`      | Path to Postman environment JSON                |
-| `--db-config <path>`            | Path to DB config JSON                          |
-| `--reporters <list>`            | Comma-separated reporters (default: `cli`)      |
-| `--reporter-htmlextra-export <path>` | Output path for HTML report               |
-
-## Writing DB requests in Postman
-
-### Request format
-
-| Field        | Value                                      |
-|--------------|--------------------------------------------|
-| **Method**   | `POST` (or any — method is ignored)        |
-| **URL**      | `db://<label>` — e.g. `db://oracle`        |
-| **Body**     | raw / JSON                                 |
-
-The request body must be a JSON object with two fields:
+### JSON format with bind variables (recommended)
 
 ```json
 {
@@ -101,69 +87,103 @@ The request body must be a JSON object with two fields:
 }
 ```
 
-### SQL injection protection
+Bind variables (`:name` syntax) are passed directly to the Oracle driver — safe from SQL injection.
 
-SQL parameters are **never** interpolated directly into the query string.
-Instead, values are passed as **Oracle bind variables** (`:paramName` syntax),
-which are handled safely by the database driver.
+### Raw SQL format
 
-```json
+You can also send a plain SQL query wrapped in `{ }`:
+
+```
 {
-  "query": "SELECT * FROM users WHERE login = :login AND role = :role",
-  "params": {
-    "login": "{{response.login}}",
-    "role":  "{{ROLE}}"
-  }
+  SELECT id, status FROM orders WHERE id = {{response.id}}
 }
 ```
 
-### Variable interpolation in params
+The `{ }` wrapper is stripped automatically. This format uses Postman's native `{{variable}}` substitution in the body before the request is sent.
+
+## Response format
+
+DB requests return a JSON object:
+
+```json
+{
+  "data": [
+    { "ID": 42, "STATUS": "PENDING" }
+  ],
+  "fetchStatus": "COMPLETE"
+}
+```
+
+Column names are returned in the case used by Oracle (typically uppercase).
+
+### Accessing results in test scripts
+
+```javascript
+const json = pm.response.json();
+
+pm.test('fetchStatus is COMPLETE', () => {
+    pm.expect(json.fetchStatus).to.eql('COMPLETE');
+});
+
+pm.test('status is PENDING', () => {
+    pm.expect(json.data[0].STATUS).to.eql('PENDING');
+});
+```
+
+## Variable interpolation
 
 `{{...}}` placeholders in `params` values are resolved from two sources:
 
-| Source                  | Syntax               | Example                    |
-|-------------------------|----------------------|----------------------------|
-| Postman environment     | `{{VAR_NAME}}`       | `{{ENV_NAME}}`             |
-| Previous HTTP response  | `{{response.field}}` | `{{response.order_id}}`    |
+| Source                 | Syntax                | Example                  |
+|------------------------|-----------------------|--------------------------|
+| Postman environment    | `{{VAR_NAME}}`        | `{{BASE_URL}}`           |
+| Previous HTTP response | `{{response.field}}`  | `{{response.id}}`        |
 
-Nested response fields are flattened with dot notation:
+After each HTTP response, all fields are automatically extracted and available as `response.<field>`. Nested objects are flattened with dot notation:
 
 ```
-Response: { "order": { "id": 42 } }
-Variable: {{response.order.id}} → 42
+Response body: { "order": { "id": 42 } }
+Variable:      {{response.order.id}}  →  42
 ```
 
-String values that look like numbers are automatically coerced to numeric type
-before being passed as bind variables.
+String values that look like numbers are coerced to numeric type before being passed as Oracle bind variables.
 
-### Example workflow
+## Multi-DB support
 
-**Request 1** — `POST /orders`
+Each `db://` request can target a different database:
 
-Response:
-```json
-{ "id": 42, "status": "PENDING" }
+```
+db://MY_DB_UA   →  connects using the "MY_DB_UA" entry in env file
+db://MY_DB_MD   →  connects using the "MY_DB_MD" entry in env file
 ```
 
-**Request 2** — URL: `db://oracle`, Body:
-```json
-{
-  "query": "SELECT status FROM orders WHERE id = :orderId",
-  "params": { "orderId": "{{response.id}}" }
-}
+## CLI reference
+
+```bash
+newman-db run <collection> [options]
 ```
 
-Returns:
-```json
-[{ "STATUS": "PENDING" }]
-```
+| Option                               | Description                                  |
+|--------------------------------------|----------------------------------------------|
+| `-e, --environment <path>`           | Postman environment file (with DB configs)   |
+| `--reporters <list>`                 | Comma-separated reporters (default: `cli`)   |
+| `--reporter-htmlextra-export <path>` | Output path for HTML report                  |
+| `--insecure`                         | Disable SSL certificate verification         |
+| `--timeout-request <ms>`             | Request timeout in milliseconds              |
 
-**Postman test script** for Request 2:
-```javascript
-const rows = pm.response.json();
-pm.test('DB status matches API response', () => {
-    pm.expect(rows[0].STATUS).to.equal('PENDING');
-});
+### Examples
+
+```bash
+# Run with environment and DB support
+newman-db run collection.json -e environment.json
+
+# Run with HTML report
+newman-db run collection.json -e environment.json \
+  --reporters cli,htmlextra \
+  --reporter-htmlextra-export ./report.html
+
+# Run without SSL verification
+newman-db run collection.json -e environment.json --insecure
 ```
 
 ## Project structure
@@ -173,24 +193,18 @@ newman-db/
 ├── bin/
 │   └── newman-db.js          CLI entry point
 ├── lib/
-│   ├── index.js              Newman runner + DB intercept logic
+│   ├── index.js              Newman runner + DB intercept
 │   └── db-adapters/
 │       ├── index.js          Adapter factory
-│       ├── oracle.js         Oracle DB adapter
-│       └── db-runner.js      SQL interpolation and execution
-├── db-config.json            Your local DB credentials (gitignored)
-├── db-config.example.json    Config template
+│       ├── oracle.js         Oracle adapter (oracledb)
+│       └── db-runner.js      SQL execution and variable interpolation
 └── package.json
 ```
 
-## Dependencies
+## Requirements
 
-| Package                    | Purpose                        |
-|----------------------------|--------------------------------|
-| `newman`                   | Postman collection runner      |
-| `oracledb`                 | Oracle DB driver               |
-| `commander`                | CLI argument parsing           |
-| `newman-reporter-htmlextra`| HTML reports (optional)        |
+- Node.js >= 16
+- Oracle Instant Client (required by `oracledb`) — see [node-oracledb installation](https://node-oracledb.readthedocs.io/en/latest/user_guide/installation.html)
 
 ## License
 

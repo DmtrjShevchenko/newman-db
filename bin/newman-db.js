@@ -11,7 +11,6 @@ program
     .command('run <collection>')
     .description('Run a Postman collection with optional DB checks')
     .option('-e, --environment <path>', 'Postman environment file')
-    .option('--db-config <path>', 'DB config JSON file')
     .option('--reporters <list>', 'Reporters to use', 'cli')
     .option('--reporter-htmlextra-export <path>', 'HTML report output path')
     .option('--insecure', 'Disable SSL certificate verification')
@@ -21,7 +20,6 @@ program
             await run({
                 collection,
                 environment: options.environment,
-                dbConfig: options.dbConfig,
                 insecure: options.insecure || false,
                 reporters: options.reporters.split(','),
                 reporter: {
