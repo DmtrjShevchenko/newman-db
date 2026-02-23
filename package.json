@@ -27,7 +27,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOUR_USERNAME/newman-db"
+    "url": "https://github.com/DmtrjShevchenko/newman-db"
   },
   "dependencies": {
     "commander": "^11.0.0",
