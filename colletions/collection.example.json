@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "b5651511-2a10-4918-a19c-9237c7f2495f",
+    "_postman_id": "b5650000-2a10-0000-a19c-9237c7f0000f",
     "name": "Example Collection — newman-db",
     "description": "Demonstrates how to use db:// requests alongside regular HTTP requests.\nCopy this file, rename it, and adapt to your project.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
