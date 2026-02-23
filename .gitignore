@@ -1,7 +1,5 @@
 node_modules/
-db-config.json
 .idea
-.claude
 .env
 report.html
 colletions/default_env.json

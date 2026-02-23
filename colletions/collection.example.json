@@ -1,0 +1,174 @@
+{
+  "info": {
+    "_postman_id": "b5651511-2a10-4918-a19c-9237c7f2495f",
+    "name": "Example Collection — newman-db",
+    "description": "Demonstrates how to use db:// requests alongside regular HTTP requests.\nCopy this file, rename it, and adapt to your project.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "0000000000001"
+  },
+  "item": [
+    {
+      "name": "1. Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.globals.set('JSESSIONID', pm.cookies.get('JSESSIONID'));",
+              "pm.globals.set('XSRF_TOKEN', pm.cookies.get('XSRF-TOKEN'));",
+              "pm.test('Status 200', () => pm.response.to.have.status(200));"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{url}}login?username=YOUR_USER&password=YOUR_PASS",
+          "host": [
+            "{{url}}login"
+          ],
+          "query": [
+            {
+              "key": "username",
+              "value": "YOUR_USER"
+            },
+            {
+              "key": "password",
+              "value": "YOUR_PASS"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. (API)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const data = pm.response.json().data;",
+              "",
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('id present', () => pm.expect(data).to.have.property('id'));",
+              "",
+              "// Save id for use in subsequent requests",
+              "pm.environment.set('Id', data.id);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-XSRF-TOKEN",
+            "value": "{{XSRF_TOKEN}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"field1\": \"value1\",\n  \"field2\": \"value2\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{url}}some/endpoint",
+          "host": [
+            "{{url}}some"
+          ],
+          "path": [
+            "endpoint"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3. Check DB — raw SQL format (legacy)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const d = pm.response.json().data;",
+              "",
+              "pm.test('3 rows returned', () => pm.expect(d.length).to.eql(3));",
+              "pm.test('first row field1', () => pm.expect(d[0].field1).to.eql(32000));"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  SELECT id, field1, field2\n    FROM table\n   WHERE id = {{Id}}\n   ORDER BY id\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "db://1_DB",
+          "protocol": "db",
+          "host": [
+            "1_DB"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "4. Logout",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-XSRF-TOKEN",
+            "value": "{{XSRF_TOKEN}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{url}}logout",
+          "host": [
+            "{{url}}logout"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
