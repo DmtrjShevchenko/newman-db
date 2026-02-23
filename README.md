@@ -153,8 +153,8 @@ String values that look like numbers are coerced to numeric type before being pa
 Each `db://` request can target a different database:
 
 ```
-db://MY_DB_UA   →  connects using the "MY_DB_UA" entry in env file
-db://MY_DB_MD   →  connects using the "MY_DB_MD" entry in env file
+db://MY_DB_1   →  connects using the "MY_DB_1" entry in env file
+db://MY_DB_2   →  connects using the "MY_DB_2" entry in env file
 ```
 
 ## CLI reference
