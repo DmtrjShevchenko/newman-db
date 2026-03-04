@@ -1,6 +1,6 @@
 {
   "name": "newman-db",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Newman runner for Postman collections with Oracle DB query support",
   "main": "lib/index.js",
   "bin": {
